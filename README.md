@@ -1,6 +1,6 @@
 # How To
 
-Some emissions did not accumulate due to the change in emisssions schedule that was made on September 9, 2024. This page describes how a validator can restore these emissions.
+On September 9, 2024 a change was made in the emisssions schedule on the Bittensor mainnet. After this change, some emissions did not accumulate. This page describes how a validator can restore these emissions.
 
 ## Requirements
 
@@ -13,15 +13,15 @@ Make sure you installed the following:
 
 A validator should execute these steps.
 
-### Clone this repo
+### Step 1: Clone this repo
 
 Clone this repo, or download it to your local computer.
 
-### Your SS58 addresses
+### Step 2: Your SS58 addresses
 
 Fill the lines 22 and 24 of [`get_emit.py`](./get_emit.py) with your ss58 address. Both your hotkey address and your validator owner key address are required.
 
-### Run Python script to get CSV and JSON
+### Step 3: Run Python script to get CSV and JSON
 
 ```
 python get_emit.py
@@ -41,7 +41,7 @@ This will *also* create a JSON file `emit_map.json` with the same mapping, but f
 
 **You only need to use one option**: either the CSV file option or the JSON file option. It is *your choice* which option to use. See the below instructions based on your choice.
 
-### Option 1 (CSV file): Use TAOMarketCap webapp
+### Step 4: Option 1 (CSV file), use TAOMarketCap webapp
 - Your owner coldkey is required to be in a browser-based wallet (e.g. Talisman).
 - You need the CSV `emit_map.csv` from the above **CSV file** section.
   
@@ -49,9 +49,13 @@ This will *also* create a JSON file `emit_map.json` with the same mapping, but f
 2. Click the **swap** icon to use the batch transfer.
 3. Click the **upload** icon to load in the `emit_map.csv` CSV file from the above **CSV file** section.
 
-The website will then prompt you to sign and send the batch call.
+The website will then prompt you to sign and send the batch call. This concludes these steps. If you performed these Option 1 steps, then this concludes all the steps you are required to do. 
 
-### Option 2 (JSON file): Use Node.js on the command-line
+**Perform the below Option 2 steps only if you do not want to use the Option 1 steps.**
+
+----
+
+### Step 4: Option 2 (JSON file), use Node.js on the command-line
 - Requires node.js. See `nvm` in the above [Requirements](#requirements). **Make sure you run** `nvm install 18`.
 - Requires yarn (`npm install yarn`)
 
