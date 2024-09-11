@@ -74,4 +74,6 @@ The website will then prompt you to sign and send the batch call. This concludes
 5. Make sure that the `emit_map.json` file (see above steps) is located in this repo's home directory, i.e., in the `tao-restore` directory.
 6. Run `yarn run start` **or** `node index.js`.
 
+Now wait a bit for the block to be finalized and notify your nominators that the emissions are in their coldkey's free balance.
+
 This concludes these steps.
