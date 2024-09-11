@@ -19,7 +19,7 @@ Clone this repo, or download it to your local computer.
 
 ### Step 2: Your SS58 addresses
 
-Fill the lines 22 and 24 of [`get_emit.py`](./get_emit.py) with your ss58 address. Both your hotkey address and your validator owner key address are required.
+Fill the lines 22 and 23 of [`get_emit.py`](./get_emit.py) with your ss58 address. Both your hotkey address (line 22) and your validator owner key address (line 23) are required.
 
 ### Step 3: Run Python script to get CSV and JSON
 
