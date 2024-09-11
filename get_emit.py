@@ -46,8 +46,11 @@ for coldkey, stake_val in starting_stake_map:
 
 # %%
 total_stake = sum(STAKE_MAP.values())
+# Get the validators commission and normalize it
+vali_take = sub.query_subtensor("SubtensorModule", "Delegates", END_BLOCK).value / (2**16 - 1)
+stake_to_emit = stake_since * (1 - vali_take)
 NEED_TO_EMIT = {
-    coldkey: int((stake_val / total_stake) * stake_since)
+    coldkey: int((stake_val / total_stake) * stake_to_emit)
     for coldkey, stake_val in STAKE_MAP.items()
 }
 
