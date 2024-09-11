@@ -41,7 +41,10 @@ This will *also* create a JSON file `emit_map.json` with the same mapping, but f
 
 **You only need to use one option**: either the CSV file option or the JSON file option. It is *your choice* which option to use. See the below instructions based on your choice.
 
-### Step 4: Option 1 (CSV file), use TAOMarketCap webapp
+### Step 5: Unstake enough TAO for sending and fees
+After running the python script, you will see an output listing "stake to distribute: XXX.XXX". You should unstake that amount into the free balance of your coldkey, with some extra for the fee to send the transaction. The TAOMarketCap tool should also display the same amount.
+
+### Step 6: Option 1 (CSV file), use TAOMarketCap webapp
 - Your owner coldkey is required to be in a browser-based wallet (e.g. Talisman).
 - You need the CSV `emit_map.csv` from the above **CSV file** section.
   
@@ -56,7 +59,7 @@ The website will then prompt you to sign and send the batch call. This concludes
 
 ----
 
-### Step 4: Option 2 (JSON file), use Node.js on the command-line
+### Step 6: Option 2 (JSON file), use Node.js on the command-line
 - Requires node.js. See `nvm` in the above [Requirements](#requirements). **Make sure you run** `nvm install 18`.
 - Requires yarn (`npm install yarn`)
 
