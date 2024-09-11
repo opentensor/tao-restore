@@ -34,7 +34,8 @@ const main = async (emit_map_json) => {
     console.log("Fee Estimate: ", fee_estimate.partialFee.toHuman())
 
     // TODO: Choose one of two options, sign and send or write to file
-    // await batch_call.signAndSend(wallet_key)
+    // const txHash = await batch_call.signAndSend(wallet_key)
+    // console.log(`Submitted with hash ${txHash}`);
 
     // writeFileSync("batch_call_js.hex", batch_call.toHex())
 }
