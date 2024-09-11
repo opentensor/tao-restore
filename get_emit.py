@@ -13,7 +13,7 @@ BLOCK_TIME = 12
 
 BLOCKS_PER_HOUR = 3600 / BLOCK_TIME
 
-U16_MAX = 65535
+U16_MAX = 2**16 - 1
 
 # %%
 START_BLOCK = 3_791_351 # First upgrade block
