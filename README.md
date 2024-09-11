@@ -67,9 +67,9 @@ The website will then prompt you to sign and send the batch call. This concludes
 
 #### Run the `index.js` script
 
-1. Add your mnemonic to line 13 of the `index.js` file. 
+1. Add your coldkey mnemonic to line 13 of the `index.js` file. 
 2. Uncomment lines 13 and 14.
-3. On line 17 fill in your validator owner coldkey ss58 address.
+3. On line 17 fill in your validator owner coldkey ss58 address. Replace "YOUR ADDRESS HERE" with your validator owner coldkey ss58 address.
 4. Next, uncomment line 37 **or** 39. Uncomment only one of these lines, not both. The line 37 will send sign and send a batch transfer using your provided mnemonic. The line 39 will output an unsiged call to `batch_call_js.hex` for your use, should you choose this option.
 5. Make sure that the `emit_map.json` file (see above steps) is located in this repo's home directory, i.e., in the `tao-restore` directory.
 6. Run `yarn run start` **or** `node index.js`.
