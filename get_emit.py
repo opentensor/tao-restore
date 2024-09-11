@@ -21,8 +21,8 @@ END_BLOCK = 3_804_620 # Fix block
 
 # %%
 # TODO: Fill in with ss58 addresses
-HOTKEY = "5F4tQyWrhfGVcNhoqeiNsR6KjD4wMZ2kfhLj4oHYuyHbZAc3" #"YOUR HOTKEY"
-OWNER_KEY = "5HBtpwxuGNL1gwzwomwR7sjwUt8WXYSuWcLYN6f9KpTZkP4k"#"YOUR OWNER KEY"
+HOTKEY = "YOUR HOTKEY"
+OWNER_KEY = "YOUR OWNER KEY"
 
 # %%
 starting_stake = sub.query_subtensor("Stake", START_BLOCK, params=[
