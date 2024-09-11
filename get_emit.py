@@ -13,14 +13,16 @@ BLOCK_TIME = 12
 
 BLOCKS_PER_HOUR = 3600 / BLOCK_TIME
 
+U16_MAX = 65535
+
 # %%
 START_BLOCK = 3_791_351 # First upgrade block
 END_BLOCK = 3_804_620 # Fix block
 
 # %%
 # TODO: Fill in with ss58 addresses
-HOTKEY = "YOUR HOTKEY"
-OWNER_KEY = "YOUR OWNER KEY"
+HOTKEY = "5F4tQyWrhfGVcNhoqeiNsR6KjD4wMZ2kfhLj4oHYuyHbZAc3" #"YOUR HOTKEY"
+OWNER_KEY = "5HBtpwxuGNL1gwzwomwR7sjwUt8WXYSuWcLYN6f9KpTZkP4k"#"YOUR OWNER KEY"
 
 # %%
 starting_stake = sub.query_subtensor("Stake", START_BLOCK, params=[
@@ -34,7 +36,11 @@ curr_stake = sub.query_subtensor("Stake", END_BLOCK, params=[
 
 # %%
 stake_since = (curr_stake - starting_stake)
-print(stake_since/1e9)
+print(f"total stake since: {stake_since/1e9}")
+
+validator_take = round(sub.query_subtensor("Delegates", END_BLOCK, params=[HOTKEY]).value/U16_MAX, 5)
+
+print(f"validator take: {validator_take}")
 
 # %%
 starting_stake_map = sub.query_map("SubtensorModule", "Stake", START_BLOCK, params=[HOTKEY])
@@ -46,10 +52,16 @@ for coldkey, stake_val in starting_stake_map:
 
 # %%
 total_stake = sum(STAKE_MAP.values())
+
+
+stake_to_distribute = stake_since * (1-validator_take)
+
+print(f"stake to distribute: {stake_to_distribute/1e9}")
 NEED_TO_EMIT = {
-    coldkey: int((stake_val / total_stake) * stake_since)
+    coldkey: int((stake_val / total_stake) * stake_to_distribute)
     for coldkey, stake_val in STAKE_MAP.items()
 }
+
 
 # %%
 to_emit_formatted = {
@@ -62,7 +74,7 @@ for coldkey, amount in NEED_TO_EMIT.items():
     to_emit_formatted["amount"].append(in_tao) 
 
 # %%
-assert (stake_since - sum(NEED_TO_EMIT.values())) <= 0.005e9
+assert (stake_to_distribute - sum(NEED_TO_EMIT.values())) <= 0.005e9
 
 # %%
 def to_csv(emission_map: Dict[str, int], filename: str):
@@ -79,5 +91,7 @@ def to_json(emission_map: Dict[str, int], filename: str):
 
 # %%
 to_json(NEED_TO_EMIT, "emit_map.json")
+
+print("Done.  Generated emit_map.csv and emit_map.json")
 
 
