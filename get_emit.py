@@ -65,7 +65,7 @@ for coldkey, amount in NEED_TO_EMIT.items():
     to_emit_formatted["amount"].append(in_tao) 
 
 # %%
-assert (stake_since - sum(NEED_TO_EMIT.values())) <= 0.005e9
+assert (stake_to_emit - sum(NEED_TO_EMIT.values())) <= 0.005e9
 
 # %%
 def to_csv(emission_map: Dict[str, int], filename: str):
