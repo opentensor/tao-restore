@@ -46,8 +46,9 @@ This will *also* create a JSON file `emit_map.json` with the same mapping, but f
 - You need the CSV `emit_map.csv` from the above **CSV file** section.
   
 1. Go to [https://taomarketcap.com/transfer](https://taomarketcap.com/transfer)
-2. Click the **swap** icon to use the batch transfer.
-3. Click the **upload** icon to load in the `emit_map.csv` CSV file from the above **CSV file** section.
+2. Click the **swap** icon to use the batch transfer. This is the double-arrow button to the right of the **Select Account** label.
+3. Click the **upload** icon. This is the up arrow button next to the double-arrow swap button.
+4. Upload in the `emit_map.csv` CSV file that you got from the above **CSV file** section.
 
 The website will then prompt you to sign and send the batch call. This concludes these steps. If you performed these Option 1 steps, then this concludes all the steps you are required to do. 
 
