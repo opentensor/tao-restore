@@ -26,6 +26,14 @@ The website should then prompt you to sign and send the batch call.
 
 ### Option 2: Use Node.js on the command-line
 - Requires node.js (see NVM install in [requirements](#requirements) )
+- Requires yarn (`npm install yarn`)
+
+#### Install dependencies
+```
+yarn
+```
+
+#### Running node script
 
 Edit `index.js` on line 13 fill in your mnemonic. Uncomment that line and line 14.
 On line 17 fill in your Owner Coldkey ss58 address. 
