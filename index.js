@@ -1,6 +1,7 @@
 import { ApiPromise, WsProvider } from "@polkadot/api"
 import { readFileSync, writeFileSync } from "fs"
 import { Keyring } from '@polkadot/keyring';
+import { waitReady } from '@polkadot/wasm-crypto';
 
 const lite_node = "wss://lite.chain.opentensor.ai:443"
 const provider = new WsProvider(lite_node)
@@ -11,12 +12,17 @@ const emit_map_json = JSON.parse(emit_map)
 
 // TODO: Uncomment and fill in mnemonic
 // const mnemonic = "your mnemonic here"
-// const wallet_key = new Keyring({ type: 'sr25519' }).addFromMnemonic(mnemonic)
 
 // TODO: fill in your owner-key address
-const pub_key = new Keyring({ type: 'sr25519' }).addFromAddress("YOUR ADDRESS HERE")
+// const OWNER_KEY = "your owner key here"
 
 const main = async (emit_map_json) => {
+    await waitReady()
+
+    // const wallet_key = new Keyring({ type: 'sr25519' }).addFromMnemonic(mnemonic)
+
+    const pub_key = new Keyring({ type: 'sr25519' }).addFromAddress(OWNER_KEY)
+    
     await api.isReady
 
     let batch_calls = [];
