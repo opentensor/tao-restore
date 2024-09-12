@@ -58,6 +58,10 @@ TO_EMIT = {}
 EMISSIONS = {}
 
 for i, curr_hk in enumerate([START_HOTKEY, END_HOTKEY]):
+    if i == 0 and START_HOTKEY == END_HOTKEY:
+        print("Start and end hotkey are the same")
+        continue
+
     # Do for each hotkey
     tempos = []
     curr_block = END_BLOCK
