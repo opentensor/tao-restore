@@ -1,0 +1,15 @@
+{
+  "name": "emit_js",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@polkadot/api": "^13.0.1",
+    "@polkadot/keyring": "^13.0.2"
+  },
+  "scripts": {
+    "start": "node index.js"
+  }
+}
