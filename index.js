@@ -63,3 +63,5 @@ const main = async (emit_map_json) => {
 };
 
 await main(emit_map_json);
+
+process.exit();
