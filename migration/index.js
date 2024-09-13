@@ -1,16 +1,18 @@
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import { readFileSync, writeFileSync } from "fs";
-import { Keyring } from "@polkadot/keyring";
+import { Keyring, encodeAddress } from "@polkadot/keyring";
 import { waitReady } from "@polkadot/wasm-crypto";
 
 const lite_node = "wss://main.mirror.test.opentensor.ai:443";
 const provider = new WsProvider(lite_node);
 const api = new ApiPromise({ provider: provider });
 
-const emit_map = readFileSync("emit_map_migration.json", "utf-8");
+const emit_map = readFileSync("./emit_map_migration.json", "utf-8");
 const emit_map_json = JSON.parse(emit_map);
 
 const BATCH_MAX_SIZE = 1000;
+let null_u8a = new Uint8Array(32);
+const NULL_ACCOUNT = encodeAddress(null_u8a);
 
 // TODO: Uncomment and fill in mnemonic
 // const mnemonic = "your mnemonic here"
@@ -22,10 +24,14 @@ const BATCH_MAX_SIZE = 1000;
 // const SIGNER_KEY = ""
 
 // TODO: fill multisig key address
-// const MULTISIG_KEY = ""
+const MULTISIG_KEY = "5GeRjQYsobRWFnrbBmGe5ugme3rfnDVF69N45YtdBpUFsJG8";
 
 // TODO: fill in multi-sig signers
-// const signers = []
+const signers = [
+  "5Ck5g3MaG7Ho29ZqmcTFgq8zTxmnrwxs6FR94RsCEquT6nLy",
+  "5EXDoq9oXTLbvQojDkpXSVpAb1LGox9vgPzT9kVmxhehynBn",
+  "5HZ2Pk4uhDi73iFrZFH3JXGp5Aa7fCXyyNkyHWBfjPCjSCcp",
+];
 
 const main = async (emit_map_json) => {
   await waitReady();
@@ -35,7 +41,7 @@ const main = async (emit_map_json) => {
   const keyring = new Keyring({ type: "sr25519" });
   const pub_key = keyring.addFromAddress(SIGNER_KEY);
   signers.forEach((signer) => {
-    if (!!keyring.getPair(signer)) {
+    if (!!keyring.publicKeys.includes(signer)) {
       keyring.addFromAddress(signer);
     }
   });
@@ -46,6 +52,7 @@ const main = async (emit_map_json) => {
   let batch_calls = [];
   let curr_batch_size = 0;
   console.log("Creating batches of calls");
+  console.log("Emit map size: ", Object.keys(emit_map_json).length);
   Object.keys(emit_map_json).forEach(async (key) => {
     if (curr_batch_size >= BATCH_MAX_SIZE) {
       // Batch into BATCH_MAX_SIZE txs for block size reduction
@@ -60,6 +67,11 @@ const main = async (emit_map_json) => {
     curr_batch_size += 1;
   });
 
+  if (curr_batch_size > 0) {
+    // Add the last batch
+    batches.push(batch_calls);
+  }
+
   if (batches.length > 0) {
     console.log("Creating batch calls");
     for (const [i, batch] of batches.entries()) {
@@ -67,7 +79,7 @@ const main = async (emit_map_json) => {
         // First batch needs to have remove stake call
         let stake_balance = await api.query.subtensorModule.stake(
           HOTKEY,
-          MULTISIG_KEY
+          NULL_ACCOUNT
         );
         let remove_stake_call = api.tx.subtensorModule.removeStake(
           HOTKEY,
@@ -82,7 +94,7 @@ const main = async (emit_map_json) => {
         signers.length, // threshold is N/N
         signers, // signers array
         null, // maybe threshold
-        batch_call.hash(), // call hash
+        batch_call.hash.toHex(), // call hash
         {
           refTime: 0,
           proofSize: 0,
@@ -90,15 +102,16 @@ const main = async (emit_map_json) => {
       );
 
       let fee_estimate = await multi_sig_call.paymentInfo(pub_key);
-
       console.log("Fee Estimate: ", fee_estimate.partialFee.toHuman());
 
       // TODO: Choose ONE of two options, sign and send or write to file
       // const txHash = await multi_sig_call.signAndSend(wallet_key)
       // console.log(`Submitted multi approval of batch:${i} with hash ${txHash}`);
 
-      // writeFileSync(`batch_call_hash_${i}.hex`, batch_call.hash());
-      // writeFileSync(`batch_call_js_${i}.hex`, batch_call.toHex());
+      writeFileSync(`batch_call_hash_${i}.hex`, batch_call.hash.toHex());
+      writeFileSync(`batch_call_js_${i}.hex`, batch_call.toHex());
+
+      writeFileSync(`multi_sig_call_${i}.hex`, multi_sig_call.toHex());
     }
   }
 
