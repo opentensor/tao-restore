@@ -1,5 +1,6 @@
 node_modules
 emit_map.json
+emit_map_migration.json 
 *.csv
 *copy*
 *.hex
