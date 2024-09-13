@@ -66,20 +66,27 @@ for i, curr_hk in enumerate([START_HOTKEY, END_HOTKEY]):
     tempos = []
     curr_block = END_BLOCK
     while curr_block > START_BLOCK:
-        if i == 0:
-            # If the start hotkey, check for swap happened
-            zero_key_stake = sub.query_subtensor("Stake", curr_block, params=[curr_hk, ZERO_KEY])
-            if zero_key_stake.value > 0:
-                print(f"Hotkey {curr_hk} swapped before block {curr_block}")
-                break
-
         # Get last emission drain
         last_emission_drain = sub.query_subtensor("LastHotkeyEmissionDrain", curr_block, params=[curr_hk])
         if not last_emission_drain:
             print(f"No last emission drain found at block {curr_block}")
             break
-        tempos.append(last_emission_drain.value)
+
+        if i == 0:
+            # If the start hotkey, check for swap happened
+            zero_key_stake = sub.query_subtensor("Stake", curr_block, params=[curr_hk, ZERO_KEY])
+            if zero_key_stake.value > 0:
+                print(f"Hotkey {curr_hk} swapped before block {curr_block}")
+                # Hotkey swapped already, skip
+            else:
+                tempos.append(last_emission_drain.value)
+                print("Adding tempo for start hotkey", last_emission_drain.value)
+        else:
+            tempos.append(last_emission_drain.value)
+
         curr_block = last_emission_drain.value - 1
+
+        
 
     filtered_tempos = [t for t in tempos if t > 0]
    
