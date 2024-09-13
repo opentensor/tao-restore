@@ -48,6 +48,8 @@ const main = async (emit_map_json) => {
 
   await api.isReady;
 
+  let total_emission = 0;
+
   let batches = [];
   let batch_calls = [];
   let curr_batch_size = 0;
@@ -63,6 +65,7 @@ const main = async (emit_map_json) => {
 
     let to_emit = emit_map_json[key];
     let tx = api.tx.balances.transferKeepAlive(key, to_emit);
+    total_emission += to_emit;
     batch_calls.push(tx);
     curr_batch_size += 1;
   });
@@ -113,6 +116,7 @@ const main = async (emit_map_json) => {
 
       writeFileSync(`multi_sig_call_${i}.hex`, multi_sig_call.toHex());
     }
+    console.log("Total emission: ", total_emission/1e9);
   }
 
   console.log("Done");
