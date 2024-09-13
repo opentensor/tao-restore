@@ -43,6 +43,10 @@ const main = async (emit_map_json) => {
     curr_batch_size += 1;
   });
 
+  if (curr_batch_size > 0) { // Add the last batch
+    batches.push(batch_calls);
+  }
+
   if (batches.length > 0) {
     console.log("Creating batch calls");
     for (const [i, batch] of batches.entries()) {
