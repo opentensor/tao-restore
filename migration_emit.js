@@ -15,8 +15,14 @@ const BATCH_MAX_SIZE = 1000;
 // TODO: Uncomment and fill in mnemonic
 // const mnemonic = "your mnemonic here"
 
+// TODO: fill with hotkey
+// const HOTKEY = ""
+
 // TODO: fill in your signer-key address
 // const SIGNER_KEY = ""
+
+// TODO: fill multisig key address
+// const MULTISIG_KEY = ""
 
 // TODO: fill in multi-sig signers
 // const signers = []
@@ -57,6 +63,18 @@ const main = async (emit_map_json) => {
   if (batches.length > 0) {
     console.log("Creating batch calls");
     for (const [i, batch] of batches.entries()) {
+      if (i === 0) {
+        // First batch needs to have remove stake call
+        let stake_balance = await api.query.subtensorModule.stake(
+          HOTKEY,
+          MULTISIG_KEY
+        );
+        let remove_stake_call = api.tx.subtensorModule.removeStake(
+          HOTKEY,
+          stake_balance
+        );
+        batch.push(remove_stake_call);
+      }
 
       let batch_call = api.tx.utility.batch(batch);
 
@@ -66,8 +84,8 @@ const main = async (emit_map_json) => {
         null, // maybe threshold
         batch_call.hash(), // call hash
         {
-          "refTime": 0,
-          "proofSize": 0
+          refTime: 0,
+          proofSize: 0,
         }
       );
 
