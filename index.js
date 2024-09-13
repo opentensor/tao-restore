@@ -43,8 +43,15 @@ const main = async (emit_map_json) => {
     curr_batch_size += 1;
   });
 
-  if (curr_batch_size > 0) { // Add the last batch
+  if (curr_batch_size > 0) {
+    // Add the last batch
     batches.push(batch_calls);
+
+    // Output last batch to file
+    writeFileSync(
+      `last_batch_call_js.json`,
+      JSON.stringify(batch_calls.map((tx) => tx.method.toHex()))
+    );
   }
 
   if (batches.length > 0) {
@@ -67,5 +74,35 @@ const main = async (emit_map_json) => {
 };
 
 await main(emit_map_json);
+
+const send_only_last_batch = async () => {
+  // const wallet_key = new Keyring({ type: 'sr25519' }).addFromMnemonic(mnemonic)
+
+  const pub_key = new Keyring({ type: "sr25519" }).addFromAddress(OWNER_KEY);
+
+  await api.isReady;
+
+  // Output last batch to file
+  let last_batch = readFileSync(`last_batch_call_js.json`);
+  let last_batch_json = JSON.parse(last_batch);
+
+  last_batch_json = last_batch_json.map((tx_encoding) => {
+    return api.createType("Call", tx_encoding);
+  });
+
+  let batch_call = api.tx.utility.batch(last_batch_json);
+  let fee_estimate = await batch_call.paymentInfo(pub_key);
+
+  console.log("Fee Estimate: ", fee_estimate.partialFee.toHuman());
+
+  // TODO: Choose ONE of two options, sign and send or write to file
+  // const txHash = await batch_call.signAndSend(wallet_key)
+  // console.log(`Submitted LAST batch with hash ${txHash}`);
+
+  // writeFileSync(`batch_call_js_last.hex`, batch_call.toHex());
+};
+
+// TODO: (Optional) send only last batch
+// await send_only_last_batch();
 
 process.exit();
