@@ -24,11 +24,10 @@ const SIGNER_KEY = "5Ck5g3MaG7Ho29ZqmcTFgq8zTxmnrwxs6FR94RsCEquT6nLy";
 // TODO: fill multisig key address
 const MULTISIG_KEY = "5GeRjQYsobRWFnrbBmGe5ugme3rfnDVF69N45YtdBpUFsJG8";
 
+const CURR_KEY = "5FKstHjZkh4v3qAMSBa1oJcHCLjxYZ8SNTSz1opTv4hR7gVB"
+
 const main = async (emit_map_json) => {
   await waitReady();
-
-  // Address as a byte array.
-
   const wallet_key = new Keyring({ type: "sr25519" }).addFromMnemonic(mnemonic);
 
   const keyring = new Keyring({ type: "sr25519" });
@@ -66,6 +65,16 @@ const main = async (emit_map_json) => {
   if (batches.length > 0) {
     console.log("Creating batch calls");
     for (const [i, batch] of batches.entries()) {
+      if (i == 0) {
+        // Add unstake to the first batch
+        let curr_stake = await api.query.subtensorModule.stake(CURR_KEY, MULTISIG_KEY);
+        let unstake_call = api.tx.subtensorModule.removeStake(
+          CURR_KEY, curr_stake
+        )
+        batch.push(unstake_call);
+        batch.reverse() // in-place
+      }
+
       let batch_call = api.tx.utility.batch(batch);
 
       let proxy_call = api.tx.proxy.proxy(
