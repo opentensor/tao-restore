@@ -2,18 +2,16 @@ import { ApiPromise, WsProvider } from "@polkadot/api";
 import { readFileSync, writeFileSync } from "fs";
 import { Keyring, encodeAddress } from "@polkadot/keyring";
 import { waitReady } from "@polkadot/wasm-crypto";
+import { createKeyMulti, sortAddresses } from "@polkadot/util-crypto";
 
-const lite_node = "wss://main.mirror.test.opentensor.ai:443";
+const lite_node = "wss://lite.chain.opentensor.ai:443";
 const provider = new WsProvider(lite_node);
 const api = new ApiPromise({ provider: provider });
 
 const emit_map = readFileSync("./emit_map_migration.json", "utf-8");
 const emit_map_json = JSON.parse(emit_map);
 
-const BATCH_MAX_SIZE = 1000;
-let null_u8a = new Uint8Array(32);
-const NULL_ACCOUNT = encodeAddress(null_u8a);
-
+const BATCH_MAX_SIZE = 1024;
 // TODO: Uncomment and fill in mnemonic
 // const mnemonic = "your mnemonic here"
 
@@ -21,30 +19,20 @@ const NULL_ACCOUNT = encodeAddress(null_u8a);
 // const HOTKEY = ""
 
 // TODO: fill in your signer-key address
-// const SIGNER_KEY = ""
+const SIGNER_KEY = "5Ck5g3MaG7Ho29ZqmcTFgq8zTxmnrwxs6FR94RsCEquT6nLy";
 
 // TODO: fill multisig key address
 const MULTISIG_KEY = "5GeRjQYsobRWFnrbBmGe5ugme3rfnDVF69N45YtdBpUFsJG8";
 
-// TODO: fill in multi-sig signers
-const signers = [
-  "5Ck5g3MaG7Ho29ZqmcTFgq8zTxmnrwxs6FR94RsCEquT6nLy",
-  "5EXDoq9oXTLbvQojDkpXSVpAb1LGox9vgPzT9kVmxhehynBn",
-  "5HZ2Pk4uhDi73iFrZFH3JXGp5Aa7fCXyyNkyHWBfjPCjSCcp",
-];
-
 const main = async (emit_map_json) => {
   await waitReady();
 
-  // const wallet_key = new Keyring({ type: 'sr25519' }).addFromMnemonic(mnemonic)
+  // Address as a byte array.
+
+  const wallet_key = new Keyring({ type: "sr25519" }).addFromMnemonic(mnemonic);
 
   const keyring = new Keyring({ type: "sr25519" });
   const pub_key = keyring.addFromAddress(SIGNER_KEY);
-  signers.forEach((signer) => {
-    if (!!keyring.publicKeys.includes(signer)) {
-      keyring.addFromAddress(signer);
-    }
-  });
 
   await api.isReady;
 
@@ -78,45 +66,40 @@ const main = async (emit_map_json) => {
   if (batches.length > 0) {
     console.log("Creating batch calls");
     for (const [i, batch] of batches.entries()) {
-      if (i === 0) {
-        // First batch needs to have remove stake call
-        let stake_balance = await api.query.subtensorModule.stake(
-          HOTKEY,
-          NULL_ACCOUNT
-        );
-        let remove_stake_call = api.tx.subtensorModule.removeStake(
-          HOTKEY,
-          stake_balance
-        );
-        batch.push(remove_stake_call);
-      }
-
       let batch_call = api.tx.utility.batch(batch);
 
-      let multi_sig_call = api.tx.multisig.approveAsMulti(
-        signers.length, // threshold is N/N
-        signers, // signers array
-        null, // maybe threshold
-        batch_call.hash.toHex(), // call hash
-        {
-          refTime: 0,
-          proofSize: 0,
-        }
+      let proxy_call = api.tx.proxy.proxy(
+        MULTISIG_KEY, // real
+        null, // forceProxyType
+        batch_call // call
       );
 
-      let fee_estimate = await multi_sig_call.paymentInfo(pub_key);
+      let fee_estimate = await proxy_call.paymentInfo(pub_key);
       console.log("Fee Estimate: ", fee_estimate.partialFee.toHuman());
 
       // TODO: Choose ONE of two options, sign and send or write to file
-      // const txHash = await multi_sig_call.signAndSend(wallet_key)
-      // console.log(`Submitted multi approval of batch:${i} with hash ${txHash}`);
+      const unsub = await proxy_call
+        .signAndSend(wallet_key, (result) => {
+          console.log(`Current status is ${result.status}`);
 
-      writeFileSync(`batch_call_hash_${i}.hex`, batch_call.hash.toHex());
-      writeFileSync(`batch_call_js_${i}.hex`, batch_call.toHex());
+          if (result.status.isInBlock) {
+            console.log(
+              `Proxy Transaction:${i} included at blockHash ${result.status.asInBlock}`
+            );
+          } else if (result.status.isFinalized) {
+            console.log(
+              `Transaction:${i} finalized at blockHash ${result.status.asFinalized}`
+            );
+            unsub();
+          }
+        });
 
-      writeFileSync(`multi_sig_call_${i}.hex`, multi_sig_call.toHex());
+      //writeFileSync(`batch_call_hash_${i}.hex`, batch_call.hash.toHex());
+      //writeFileSync(`batch_call_js_${i}.hex`, batch_call.toHex());
+
+      writeFileSync(`proxy_call_${i}.hex`, proxy_call.toHex());
     }
-    console.log("Total emission: ", total_emission/1e9);
+    console.log("Total emission: ", total_emission / 1e9);
   }
 
   console.log("Done");
