@@ -1,6 +1,6 @@
 {
-  "name": "emit_js",
-  "version": "1.1.0",
+  "name": "migration_js",
+  "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
   "private": true,
@@ -10,7 +10,6 @@
     "@polkadot/keyring": "^13.0.2"
   },
   "scripts": {
-    "start": "node index.js",
-    "migration": "node migration/index.js"
+    "start": "node index.js"
   }
 }
