@@ -7,102 +7,74 @@ const lite_node = "wss://lite.chain.opentensor.ai:443";
 const provider = new WsProvider(lite_node);
 const api = new ApiPromise({ provider: provider });
 
-const emit_map = readFileSync("emit_map.json", "utf-8");
-const emit_map_json = JSON.parse(emit_map);
+// Read mnemonic and OWNER_KEY from environment variables
+const mnemonic = process.env.MNEMONIC;
+const OWNER_KEY = process.env.OWNER_KEY;
 
-// TODO: Uncomment and fill in mnemonic
-// const mnemonic = "your mnemonic here"
 
-// TODO: fill in your owner-key address
-// const OWNER_KEY = "your owner key here"
+// Ensure both variables are set
+if (!mnemonic || !OWNER_KEY) {
+    console.error("Error: MNEMONIC and OWNER_KEY must be set in the environment variables.");
+    process.exit(1);
+}
 
 const main = async (emit_map_json) => {
-  await waitReady();
+    try {
+        await waitReady();
 
-  // const wallet_key = new Keyring({ type: 'sr25519' }).addFromMnemonic(mnemonic)
+        const wallet_key = new Keyring({ type: 'sr25519' }).addFromMnemonic(mnemonic);
+        const pub_key = new Keyring({ type: "sr25519" }).addFromAddress(OWNER_KEY);
 
-  const pub_key = new Keyring({ type: "sr25519" }).addFromAddress(OWNER_KEY);
+        await api.isReady;
 
-  await api.isReady;
+        let batches = [];
+        let batch_calls = [];
+        let curr_batch_size = 0;
+        console.log("Creating batches of calls");
 
-  let batches = [];
-  let batch_calls = [];
-  let curr_batch_size = 0;
-  console.log("Creating batches of calls");
-  Object.keys(emit_map_json).forEach(async (key) => {
-    if (curr_batch_size >= 1000) {
-      // Batch into 1000 txs for block size reduction
-      batches.push(batch_calls);
-      batch_calls = [];
-      curr_batch_size = 0;
+        for (const [key, to_emit] of Object.entries(emit_map_json)) {
+            if (curr_batch_size >= 1000) {
+                batches.push(batch_calls);
+                batch_calls = [];
+                curr_batch_size = 0;
+            }
+
+            let tx = api.tx.balances.transferKeepAlive(key, to_emit);
+            batch_calls.push(tx);
+            curr_batch_size += 1;
+        }
+
+        if (curr_batch_size > 0) {
+            batches.push(batch_calls);
+            writeFileSync(
+                `last_batch_call_js.json`,
+                JSON.stringify(batch_calls.map((tx) => tx.method.toHex()))
+            );
+        }
+
+        for (const [i, batch] of batches.entries()) {
+            let batch_call = api.tx.utility.batch(batch);
+            let fee_estimate = await batch_call.paymentInfo(pub_key);
+
+            console.log("Fee Estimate: ", fee_estimate.partialFee.toHuman());
+
+//             Uncomment one option to either sign and send or write to file
+             const txHash = await batch_call.signAndSend(wallet_key);
+             console.log(`Submitted batch:${i} with hash ${txHash}`);
+
+//             writeFileSync(`batch_call_js_${i}.hex`, batch_call.toHex());
+        }
+
+        console.log("Done");
+    } catch (error) {
+        console.error("An error occurred:", error);
+    } finally {
+        // Ensure all connections are closed
+        await api.disconnect();
+        process.exit(0);  // Exit the script successfully
     }
-
-    let to_emit = emit_map_json[key];
-    let tx = api.tx.balances.transferKeepAlive(key, to_emit);
-    batch_calls.push(tx);
-    curr_batch_size += 1;
-  });
-
-  if (curr_batch_size > 0) {
-    // Add the last batch
-    batches.push(batch_calls);
-
-    // Output last batch to file
-    writeFileSync(
-      `last_batch_call_js.json`,
-      JSON.stringify(batch_calls.map((tx) => tx.method.toHex()))
-    );
-  }
-
-  if (batches.length > 0) {
-    console.log("Creating batch calls");
-    for (const [i, batch] of batches.entries()) {
-      let batch_call = api.tx.utility.batch(batch);
-      let fee_estimate = await batch_call.paymentInfo(pub_key);
-
-      console.log("Fee Estimate: ", fee_estimate.partialFee.toHuman());
-
-      // TODO: Choose ONE of two options, sign and send or write to file
-      // const txHash = await batch_call.signAndSend(wallet_key)
-      // console.log(`Submitted batch:${i} with hash ${txHash}`);
-
-      // writeFileSync(`batch_call_js_${i}.hex`, batch_call.toHex());
-    }
-  }
-
-  console.log("Done");
 };
 
+// Load emit_map.json data and run main function
+const emit_map_json = JSON.parse(readFileSync("emit_map.json", "utf-8"));
 await main(emit_map_json);
-
-const send_only_last_batch = async () => {
-  // const wallet_key = new Keyring({ type: 'sr25519' }).addFromMnemonic(mnemonic)
-
-  const pub_key = new Keyring({ type: "sr25519" }).addFromAddress(OWNER_KEY);
-
-  await api.isReady;
-
-  // Output last batch to file
-  let last_batch = readFileSync(`last_batch_call_js.json`);
-  let last_batch_json = JSON.parse(last_batch);
-
-  last_batch_json = last_batch_json.map((tx_encoding) => {
-    return api.createType("Call", tx_encoding);
-  });
-
-  let batch_call = api.tx.utility.batch(last_batch_json);
-  let fee_estimate = await batch_call.paymentInfo(pub_key);
-
-  console.log("Fee Estimate: ", fee_estimate.partialFee.toHuman());
-
-  // TODO: Choose ONE of two options, sign and send or write to file
-  // const txHash = await batch_call.signAndSend(wallet_key)
-  // console.log(`Submitted LAST batch with hash ${txHash}`);
-
-  // writeFileSync(`batch_call_js_last.hex`, batch_call.toHex());
-};
-
-// TODO: (Optional) send only last batch
-// await send_only_last_batch();
-
-process.exit();
