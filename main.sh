@@ -3,7 +3,7 @@
 # Define file paths
 CSV_FILE="emit_map.csv"  # Change this to your input CSV file
 JSON_FILE="emit_map.json"  # Output JSON file from the Python script
-NODE_SCRIPT="index.js"  # Node.js script to process the TAO transfers
+PYTHON_SCRIPT="main.py"  # Node.js script to process the TAO transfers
 
 # Step 1: Convert CSV to JSON
 echo "Converting CSV to JSON..."
@@ -44,18 +44,18 @@ if [ -f .env ]; then
     source .env
     set +a  # Turn off automatic exporting
 else
-    echo "Error: .env file not found. Please create one with MNEMONIC and OWNER_KEY."
+    echo "Error: .env file not found. Please create one with WALLET_NAME"
     exit 1
 fi
 
 # Step 3: Run the Node.js script
-echo "Executing Node.js script for TAO transfers..."
-node $NODE_SCRIPT
+echo "Executing Python script for TAO transfers..."
+python3 $PYTHON_SCRIPT
 
 # Check if the Node.js script executed successfully
 if [[ $? -eq 0 ]]; then
     echo "TAO transfer process completed successfully."
 else
-    echo "Error: Node.js script execution failed."
+    echo "Error: Python script execution failed."
     exit 1
 fi

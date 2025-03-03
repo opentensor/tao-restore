@@ -1,82 +1,55 @@
-# How To
+# TAO Restore Script
 
-On September 9, 2024 a change was made in the emisssions schedule on the Bittensor mainnet. After this change, some emissions did not accumulate. This page describes how a validator can restore these emissions.
+This script allows you to perform batch TAO transfers to multiple addresses using a CSV file as input.
 
-## Requirements
+## Prerequisites
 
-Make sure you installed the following:
+- Python 3.x
+- Required Python packages (install using `pip install -r requirements.txt`):
+  - bittensor==9.0.2
+  - pandas==2.2.3
 
-- Node Version Manager, `nvm` (**optional**): https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating
-- Python: 3.9+
+## Setup
 
-## Steps
+1. Create a `.env` file in the project root with the following variables:
+   ```
+   # Option 1: Use existing wallet by name
+   WALLET_NAME="your_wallet_name"
+   
+   # Option 2: Use mnemonic to create/regenerate wallet
+   MNEMONIC="your wallet mnemonic"
+   
+   # Network configuration (optional, defaults to "finney")
+   SUBTENSOR_NETWORK="finney"
+   ```
 
-A validator should execute these steps.
+2. Prepare your input CSV file named `emit_map.csv` with the following columns:
+   - `address`: The destination TAO address
+   - `amount`: The amount of TAO to transfer
 
-### Step 1: Clone this repo
+## Usage
 
-Clone this repo, or download it to your local computer.
+1. Run the script using:
+   ```bash
+   ./main.sh
+   ```
 
-### Step 2: Your SS58 addresses
+The script will:
+1. Convert your CSV file to JSON format
+2. Load your wallet configuration from the `.env` file
+3. Execute the batch transfer of TAO to all addresses specified in your CSV file
 
-Fill the lines 22 and 23 of [`get_emit.py`](./get_emit.py) with your ss58 address. Both your hotkey address (line 22) and your validator owner key address (line 23) are required.
+## Output
 
-### Step 3: Run Python script to get CSV and JSON
+After successful execution, the script will display:
+- The execution time of each operation
+- The transaction hash
+- A link to view the transaction on TaoStats.io (available some time after execution)
 
-```
-python get_emit.py
-```
+## Notes
 
-**CSV file**
-
-This will create a CSV file called `emit_map.csv` with columns `address, amount` containing these details:
-- The SS58 keys to send TAO to.
-- The specific amounts to send to these SS58 keys.
-
-The file is formatted for import into [https://taomarketcap.com/transfer](https://taomarketcap.com/transfer) (batch transfer upload).
-
-**JSON file**
-
-This will *also* create a JSON file `emit_map.json` with the same mapping, but for use with a `node.js` script to run this call on the command-line. 
-
-**You only need to use one option**: either the CSV file option or the JSON file option. It is *your choice* which option to use. See the below instructions based on your choice.
-
-### Step 5: Unstake enough TAO for sending and fees
-After running the python script, you will see an output listing "stake to distribute: XXX.XXX". You should unstake that amount into the free balance of your coldkey, with some extra for the fee to send the transaction. The TAOMarketCap tool should also display the same amount.
-
-### Step 6: Option 1 (CSV file), use TAOMarketCap webapp
-- Your owner coldkey is required to be in a browser-based wallet (e.g. Talisman).
-- You need the CSV `emit_map.csv` from the above **CSV file** section.
-  
-1. Go to [https://taomarketcap.com/transfer](https://taomarketcap.com/transfer)
-2. Click the **swap** icon to use the batch transfer. This is the double-arrow button to the right of the **Select Account** label.
-3. Click the **upload** icon. This is the up arrow button next to the double-arrow swap button.
-4. Upload in the `emit_map.csv` CSV file that you got from the above **CSV file** section.
-
-The website will then prompt you to sign and send the batch call. This concludes these steps. If you performed these Option 1 steps, then this concludes all the steps you are required to do. 
-
-**Perform the below Option 2 steps only if you do not want to use the Option 1 steps.**
-
-----
-
-### Step 6: Option 2 (JSON file), use Node.js on the command-line
-- Requires node.js. See `nvm` in the above [Requirements](#requirements). **Make sure you run** `nvm install 18`.
-- Requires yarn (`npm install yarn`)
-
-#### Install dependencies
-
-1. Make sure you cloned this repo.
-2. Install dependencies by running `yarn` on the command line where you cloned this repo.
-
-#### Run the `index.js` script
-
-1. Add your coldkey mnemonic to line 13 of the `index.js` file. 
-2. Uncomment lines 13 and 14.
-3. On line 17 fill in your validator owner coldkey ss58 address. Replace "YOUR ADDRESS HERE" with your validator owner coldkey ss58 address.
-4. Next, uncomment either the two lines 37 and 38 **or** the single line 40. Uncomment only one of either, not both. The line 37 will send sign and send a batch transfer using your provided mnemonic and display the message (line 38). The line 40 will output an unsiged call to `batch_call_js.hex` for your use, should you choose this option.
-5. Make sure that the `emit_map.json` file (see above steps) is located in this repo's home directory, i.e., in the `tao-restore` directory.
-6. Run `yarn run start` **or** `node index.js`.
-
-Now wait a bit for the block to be finalized and notify your nominators that the emissions are in their coldkey's free balance.
-
-This concludes these steps.
+- The script uses the Finney network by default
+- All amounts in the CSV should be in TAO (not RAO)
+- The script will automatically convert TAO amounts to RAO for the transaction
+- Make sure you have sufficient TAO in your wallet to cover all transfers plus transaction fees
+- If neither WALLET_NAME nor MNEMONIC is provided, the script will use a default temporary wallet named "tao_restore_temp_wallet"
